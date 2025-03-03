@@ -1,4 +1,4 @@
 {
   "editor.formatOnSave": true,
-  "cSpell.words": ["flate"]
+  "cSpell.words": ["flate", "reqwest"]
 }
