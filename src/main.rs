@@ -3,7 +3,8 @@ mod routes;
 use reqwest::Client;
 use routes::*;
 
-use axum::{Router, routing::get};
+use axum::{routing::get, Router};
+use tower_http::cors::{Any, CorsLayer};
 
 #[tokio::main]
 async fn main() {
@@ -11,9 +12,15 @@ async fn main() {
 
     let app = Router::new()
         .route("/proxy/{*wildcard}", get(proxy::handle_proxy))
-        .with_state(client);
+        .with_state(client)
+        .layer(
+            CorsLayer::new()
+                .allow_headers(Any)
+                .allow_methods(Any)
+                .allow_origin(Any),
+        );
 
-    let listener = tokio::net::TcpListener::bind("localhost:3000")
+    let listener = tokio::net::TcpListener::bind("localhost:3333")
         .await
         .unwrap();
 
