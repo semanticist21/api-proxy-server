@@ -1,7 +1,10 @@
+use std::collections::HashMap;
+
 use axum::{
-    body::Bytes,
-    extract::{Path, State},
-    http::HeaderMap,
+    body::{Body, Bytes},
+    extract::{Path, Query, State},
+    http::{HeaderMap, Response},
+    response::IntoResponse,
     Json,
 };
 use reqwest::{Client, Method};
@@ -11,10 +14,11 @@ const INCLUDE_ON_REQUEST_HEADERS: &[&str] = &["Authorization"];
 pub async fn handle_proxy(
     method: Method,
     Path(url): Path<String>,
+    Query(params): Query<HashMap<String, String>>,
     headers: HeaderMap,
     State(client): State<Client>,
     body: Bytes,
-) -> Result<Json<serde_json::Value>, String> {
+) -> Result<Response<Body>, String> {
     println!("{:?}", url);
 
     let mut request_builder = client.request(method, url);
@@ -34,14 +38,17 @@ pub async fn handle_proxy(
 
     let response = request_builder
         .body(body)
+        .query(&params)
         .send()
         .await
         .map_err(|e| e.to_string())?;
+
+    let status = response.status();
 
     let json = response
         .json::<serde_json::Value>()
         .await
         .map_err(|e| e.to_string())?;
 
-    Ok(Json(json))
+    Ok((status, Json(json)).into_response())
 }
