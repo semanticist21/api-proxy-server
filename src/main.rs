@@ -8,7 +8,10 @@ use tower_http::cors::{Any, CorsLayer};
 
 #[tokio::main]
 async fn main() {
-    let client = Client::new();
+    let client = Client::builder()
+        .danger_accept_invalid_certs(true)
+        .build()
+        .unwrap();
 
     let app = Router::new()
         .route("/proxy/{*wildcard}", get(proxy::handle_proxy))
@@ -20,9 +23,7 @@ async fn main() {
                 .allow_origin(Any),
         );
 
-    let listener = tokio::net::TcpListener::bind("localhost:3333")
-        .await
-        .unwrap();
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:5055").await.unwrap();
 
     axum::serve(listener, app).await.unwrap();
 }
