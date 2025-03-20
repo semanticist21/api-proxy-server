@@ -7,7 +7,7 @@ RUN cargo build --release
 
 FROM debian:bullseye-slim AS runner
 
-COPY --from=builder /app/dist/target/release/sidecar /usr/local/bin/sidecar
+COPY --from=builder /dist/target/release/api-proxy-server /usr/local/bin/api-proxy-server
 
-CMD ["/usr/local/bin/sidecar"]
+CMD ["/usr/local/bin/api-proxy-server"]
 
