@@ -64,6 +64,7 @@ pub async fn handle_proxy(
         let content_type = content_type.to_str().unwrap_or("");
         
         if content_type.contains("application/json") {
+            println!("{:?} >> JSON", url);
             // Handle JSON response
             let json = response
                 .json::<serde_json::Value>()
@@ -74,6 +75,7 @@ pub async fn handle_proxy(
         }
     }
     
+    println!("{:?} >> Non-JSON", url);
     // Handle non-JSON responses (HTML, text, etc.)
     
     // Create response builder and set status
@@ -81,10 +83,11 @@ pub async fn handle_proxy(
     
     // Copy important headers but skip problematic ones that might cause conflicts
     for (key, value) in headers.iter() {
-        // Skip headers that might cause issues with chunked transfer
+        // Skip headers that might cause issues with chunked transfer or CORS
         let header_name = key.as_str().to_lowercase();
         if !header_name.contains("transfer-encoding") && 
-           !header_name.contains("content-length") {
+           !header_name.contains("content-length") &&
+           !header_name.contains("access-control-") {
             res = res.header(key, value);
         }
     }
