@@ -20,7 +20,8 @@ async fn main() {
             CorsLayer::new()
                 .allow_headers(Any)
                 .allow_methods(Any)
-                .allow_origin(Any),
+                .allow_origin(Any)
+                .allow_credentials(true),
         );
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:5055").await.unwrap();
