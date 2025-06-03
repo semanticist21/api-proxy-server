@@ -3,7 +3,7 @@ mod routes;
 use reqwest::Client;
 use routes::*;
 
-use axum::{routing::get, Router};
+use axum::{routing::{get, post, put, delete, options, any}, Router};
 use tower_http::cors::{Any, CorsLayer};
 
 #[tokio::main]
@@ -14,7 +14,7 @@ async fn main() {
         .unwrap();
 
     let app = Router::new()
-        .route("/proxy/{*wildcard}", get(proxy::handle_proxy))
+        .route("/proxy/{*wildcard}", any(proxy::handle_proxy))
         .with_state(client)
         .layer(
             CorsLayer::new()
