@@ -8,13 +8,24 @@ Forwards API requests to avoid CORS issues and add authentication layers to thir
 
 ### Headers
 
-The proxy will automatically forward the `Authorization` header from your requests to the target API. This allows you to maintain authentication while going through the proxy.
-
-To forward additional headers, modify the `INCLUDE_ON_REQUEST_HEADERS` constant in `src/routes/proxy.rs`:
+The proxy forwards essential headers to support various request types:
 
 ```rust
-const INCLUDE_ON_REQUEST_HEADERS: &[&str] = &["Authorization", "Content-Type", "Your-Custom-Header"];
+const INCLUDE_ON_REQUEST_HEADERS: &[&str] = &[
+    "Authorization",
+    "Content-Type", 
+    "Content-Disposition", 
+    "Content-Length",
+    "Accept",
+    "X-Requested-With"
+];
 ```
+
+### Supported Request Types
+
+- JSON API calls
+- HTML/plain text responses
+- Multipart form data (file uploads)
 
 ## Docker Usage
 
@@ -33,7 +44,11 @@ docker run -p 5055:5055 api-proxy-server:latest
 ### Run (background/daemon)
 
 ```bash
-docker run -d -p 5055:5055 api-proxy-server:latest
+# Remove existing container if needed
+docker rm -f api-proxy-server || true
+
+# Run in background with a container name for easy management
+docker run -d --name api-proxy-server -p 5055:5055 api-proxy-server:latest
 ```
 
 ## Example
