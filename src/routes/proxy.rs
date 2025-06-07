@@ -1,22 +1,22 @@
 use std::collections::HashMap;
 
 use axum::{
+    Json,
     body::{Body, Bytes},
     extract::{Path, Query, State},
     http::{HeaderMap, Response},
     response::IntoResponse,
-    Json,
 };
 use reqwest::{Client, Method};
 
 // Headers to forward from client requests to target API
 const INCLUDE_ON_REQUEST_HEADERS: &[&str] = &[
     "Authorization",
-    "Content-Type", 
-    "Content-Disposition", 
+    "Content-Type",
+    "Content-Disposition",
     "Content-Length",
     "Accept",
-    "X-Requested-With"
+    "X-Requested-With",
 ];
 
 pub async fn handle_proxy(
@@ -27,7 +27,7 @@ pub async fn handle_proxy(
     State(client): State<Client>,
     body: Bytes,
 ) -> Result<Response<Body>, String> {
-    println!("{:?}", url);
+    println!("Request: {:?}", url);
 
     // Add a user agent to make sites like Google respond properly
     let mut request_builder = client.request(method.clone(), url.clone())
@@ -58,40 +58,41 @@ pub async fn handle_proxy(
     // Get status and headers
     let status = response.status();
     let headers = response.headers().clone();
-    
+
     // Check if the response is JSON
     if let Some(content_type) = headers.get("content-type") {
         let content_type = content_type.to_str().unwrap_or("");
-        
+
         if content_type.contains("application/json") {
-            println!("{:?} >> JSON", url);
+            println!("Response: {:?} >> JSON", url);
             // Handle JSON response
             let json = response
                 .json::<serde_json::Value>()
                 .await
                 .map_err(|e| format!("Failed to parse JSON: {}", e))?;
-                
+
             return Ok((status, Json(json)).into_response());
         }
     }
-    
-    println!("{:?} >> Non-JSON", url);
+
+    println!("Response: {:?} >> Non-JSON", url);
     // Handle non-JSON responses (HTML, text, etc.)
-    
+
     // Create response builder and set status
     let mut res = Response::builder().status(status);
-    
+
     // Copy important headers but skip problematic ones that might cause conflicts
     for (key, value) in headers.iter() {
         // Skip headers that might cause issues with chunked transfer or CORS
         let header_name = key.as_str().to_lowercase();
-        if !header_name.contains("transfer-encoding") && 
-           !header_name.contains("content-length") &&
-           !header_name.contains("access-control-") {
+        if !header_name.contains("transfer-encoding")
+            && !header_name.contains("content-length")
+            && !header_name.contains("access-control-")
+        {
             res = res.header(key, value);
         }
     }
-    
+
     // Set content type if it exists
     if let Some(content_type) = headers.get("content-type") {
         res = res.header("content-type", content_type);
@@ -102,10 +103,10 @@ pub async fn handle_proxy(
         .bytes()
         .await
         .map_err(|e| format!("Failed to read response body: {}", e))?;
-    
+
     // Set content-length header based on actual bytes
     res = res.header("content-length", bytes.len().to_string());
-        
+
     res.body(Body::from(bytes))
         .map_err(|e| format!("Failed to create response: {}", e))
 }
