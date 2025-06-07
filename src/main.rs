@@ -3,7 +3,7 @@ mod routes;
 use reqwest::Client;
 use routes::*;
 
-use axum::{routing::{get, post, put, delete, options, any}, Router};
+use axum::{routing::any, Router};
 use tower_http::cors::{Any, CorsLayer};
 
 #[tokio::main]
@@ -21,7 +21,6 @@ async fn main() {
                 .allow_headers(Any)
                 .allow_methods(Any)
                 .allow_origin(Any)
-                .allow_credentials(true),
         );
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:5055").await.unwrap();
